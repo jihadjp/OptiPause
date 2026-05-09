@@ -1,10 +1,12 @@
 package com.jptechgenius.optipause.viewmodel;
 
 import android.app.Application;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Build;
 import android.os.CountDownTimer;
-import android.os.Handler;
-import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -15,16 +17,8 @@ import com.jptechgenius.optipause.alarm.IntervalAlarmManager;
 import com.jptechgenius.optipause.repository.TimerRepository;
 import com.jptechgenius.optipause.service.TimerForegroundService;
 
-/**
- * TimerViewModel
- * * Modified for Manual Eye Breaks:
- * 1. Alarm fires after 20 mins.
- * 2. ViewModel stops and waits for user.
- * 3. User takes a break and manually clicks "Start" for the next session.
- */
 public class TimerViewModel extends AndroidViewModel {
 
-    // ─── LiveData ────────────────────────────────────────────────────────────
     private final MutableLiveData<Boolean> _isRunning        = new MutableLiveData<>(false);
     private final MutableLiveData<Long>    _remainingMillis  = new MutableLiveData<>(0L);
     private final MutableLiveData<Long>    _intervalMillis   = new MutableLiveData<>();
@@ -32,46 +26,53 @@ public class TimerViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> _exactAlarmGranted = new MutableLiveData<>(true);
     private final MutableLiveData<String>  _toastMessage     = new MutableLiveData<>();
 
+    // NEW: Track if we are currently in Break Mode
+    private final MutableLiveData<Boolean> _isBreakMode      = new MutableLiveData<>(false);
+
     public LiveData<Boolean> isRunning()         { return _isRunning; }
     public LiveData<Long>    remainingMillis()   { return _remainingMillis; }
     public LiveData<Long>    intervalMillis()    { return _intervalMillis; }
     public LiveData<Float>   progressFraction()  { return _progressFraction; }
     public LiveData<Boolean> exactAlarmGranted() { return _exactAlarmGranted; }
     public LiveData<String>  toastMessage()      { return _toastMessage; }
+    public LiveData<Boolean> isBreakMode()       { return _isBreakMode; } // NEW
 
-    // ─── Dependencies ────────────────────────────────────────────────────────
     private final TimerRepository      repository;
     private final IntervalAlarmManager alarmManager;
-
-    // ─── Internal countdown ──────────────────────────────────────────────────
     private CountDownTimer countDownTimer;
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Constructor
-    // ─────────────────────────────────────────────────────────────────────────
+    private final BroadcastReceiver stateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (TimerForegroundService.ACTION_STATE_CHANGED.equals(intent.getAction())) {
+                reattachCountdown();
+            }
+        }
+    };
 
     public TimerViewModel(@NonNull Application application) {
         super(application);
         repository   = new TimerRepository(application);
         alarmManager = new IntervalAlarmManager(application);
 
-        // Restore persisted settings
-        long savedInterval = repository.getIntervalMillis();
-        _intervalMillis.setValue(savedInterval);
-        _remainingMillis.setValue(savedInterval); // Default display
-        _exactAlarmGranted.setValue(alarmManager.canScheduleExactAlarms());
+        IntentFilter filter = new IntentFilter(TimerForegroundService.ACTION_STATE_CHANGED);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            application.registerReceiver(stateReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            application.registerReceiver(stateReceiver, filter);
+        }
 
-        // Re-attach if was running (e.g., config change)
+        long currentInterval = getCurrentInterval();
+        _intervalMillis.setValue(currentInterval);
+        _remainingMillis.setValue(currentInterval);
+        _exactAlarmGranted.setValue(alarmManager.canScheduleExactAlarms());
+        _isBreakMode.setValue(repository.isBreakMode());
+
         if (repository.isRunning()) {
             reattachCountdown();
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Public commands
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /** Starts a single 20-min session. User must trigger this manually each time. */
     public void startTimer() {
         if (Boolean.TRUE.equals(_isRunning.getValue())) return;
 
@@ -81,24 +82,21 @@ public class TimerViewModel extends AndroidViewModel {
             return;
         }
 
-        long interval = getCurrentInterval();
+        repository.setBreakMode(false);
+        long interval = repository.getWorkMillis();
         long startTime = System.currentTimeMillis();
         long nextAlarm = startTime + interval;
 
-        // Persist state
         repository.saveTimerState(true, nextAlarm, startTime);
-
-        // Schedule one-time alarm
         alarmManager.scheduleNextAlarm(interval);
-
-        // Start service to keep app alive during the 20 mins
         startForegroundService(interval);
 
         _isRunning.setValue(true);
+        _isBreakMode.setValue(false);
+        _intervalMillis.setValue(interval);
         startCountdownTick(interval, interval);
     }
 
-    /** Manually stops and resets everything. Used when user finishes work. */
     public void stopTimer() {
         cancelCountdownTick();
         alarmManager.cancelAlarm();
@@ -106,26 +104,36 @@ public class TimerViewModel extends AndroidViewModel {
         repository.clearTimerState();
 
         _isRunning.setValue(false);
-        _remainingMillis.setValue(getCurrentInterval());
+        _isBreakMode.setValue(false);
+        long workInterval = repository.getWorkMillis();
+        _intervalMillis.setValue(workInterval);
+        _remainingMillis.setValue(workInterval);
         _progressFraction.setValue(0f);
     }
 
+    // UPDATED LOGIC: Smart Toggle
     public void toggleTimer() {
         if (Boolean.TRUE.equals(_isRunning.getValue())) {
-            stopTimer();
+            Long currentRemaining = _remainingMillis.getValue();
+            if (currentRemaining != null && currentRemaining <= 0L) {
+                // Time is 00:00 and Alarm is ringing -> Dismiss Alarm & Go to next phase
+                Intent intent = new Intent(getApplication(), TimerForegroundService.class);
+                intent.setAction(TimerForegroundService.ACTION_DISMISS_ALARM);
+                getApplication().startService(intent);
+            } else {
+                // Timer is running normally -> Full Stop
+                stopTimer();
+            }
         } else {
             startTimer();
         }
     }
 
-    public void setIntervalMinutes(int minutes) {
-        long millis = minutes * 1000L;
-        repository.saveIntervalMillis(millis);
-        _intervalMillis.setValue(millis);
-
-        // Reset UI even if not running
-        if (Boolean.FALSE.equals(_isRunning.getValue())) {
-            _remainingMillis.setValue(millis);
+    public void refreshStateFromSettings() {
+        if (!Boolean.TRUE.equals(_isRunning.getValue())) {
+            long workInterval = repository.getWorkMillis();
+            _intervalMillis.setValue(workInterval);
+            _remainingMillis.setValue(workInterval);
             _progressFraction.setValue(0f);
         }
     }
@@ -134,25 +142,37 @@ public class TimerViewModel extends AndroidViewModel {
         _exactAlarmGranted.setValue(alarmManager.canScheduleExactAlarms());
     }
 
-    /** * UPDATED: Called when alarm fires.
-     * Resets the UI to "Idle" state so user can take a break.
-     */
-    public void onAlarmFired() {
-        _isRunning.postValue(false);
-        _remainingMillis.postValue(getCurrentInterval());
-        _progressFraction.postValue(0f);
+    public void reattachCountdown() {
+        boolean running = repository.isRunning();
+        _isRunning.postValue(running);
+        _isBreakMode.postValue(repository.isBreakMode()); // Sync break state
 
-        // We do NOT reschedule here. User must click "Start" again.
-        cancelCountdownTick();
+        if (!running) {
+            cancelCountdownTick();
+            long workInterval = repository.getWorkMillis();
+            _intervalMillis.postValue(workInterval);
+            _remainingMillis.postValue(workInterval);
+            _progressFraction.postValue(0f);
+            return;
+        }
+
+        long nextAlarm = repository.getNextAlarmTime();
+        long now = System.currentTimeMillis();
+        long remaining = nextAlarm - now;
+        long totalInterval = getCurrentInterval();
+
+        if (remaining > 0) {
+            _intervalMillis.postValue(totalInterval);
+            startCountdownTick(totalInterval, remaining);
+        } else {
+            _remainingMillis.postValue(0L);
+            _progressFraction.postValue(1f);
+        }
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Countdown logic
-    // ─────────────────────────────────────────────────────────────────────────
 
     private void startCountdownTick(long totalMillis, long remainingMs) {
         final long total = totalMillis;
-        cancelCountdownTick(); // Clean up old timer
+        cancelCountdownTick();
 
         countDownTimer = new CountDownTimer(remainingMs, 1000) {
             @Override
@@ -164,7 +184,8 @@ public class TimerViewModel extends AndroidViewModel {
 
             @Override
             public void onFinish() {
-                onAlarmFired();
+                _remainingMillis.postValue(0L);
+                _progressFraction.postValue(1f);
             }
         }.start();
     }
@@ -176,30 +197,15 @@ public class TimerViewModel extends AndroidViewModel {
         }
     }
 
-    private void reattachCountdown() {
-        long nextAlarm = repository.getNextAlarmTime();
-        long interval  = getCurrentInterval();
-        long now       = System.currentTimeMillis();
-        long remaining = nextAlarm - now;
-
-        if (remaining > 0) {
-            _isRunning.setValue(true);
-            startCountdownTick(interval, remaining);
-        } else {
-            repository.clearTimerState();
-            _isRunning.setValue(false);
-        }
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Service control
-    // ─────────────────────────────────────────────────────────────────────────
-
     private void startForegroundService(long intervalMillis) {
         Intent intent = new Intent(getApplication(), TimerForegroundService.class);
         intent.setAction(TimerForegroundService.ACTION_START);
         intent.putExtra(TimerForegroundService.EXTRA_INTERVAL_MILLIS, intervalMillis);
-        getApplication().startForegroundService(intent);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            getApplication().startForegroundService(intent);
+        } else {
+            getApplication().startService(intent);
+        }
     }
 
     private void stopForegroundService() {
@@ -209,13 +215,15 @@ public class TimerViewModel extends AndroidViewModel {
     }
 
     private long getCurrentInterval() {
-        Long v = _intervalMillis.getValue();
-        return (v != null && v > 0) ? v : TimerRepository.DEFAULT_INTERVAL_MILLIS;
+        return repository.isBreakMode() ? repository.getBreakMillis() : repository.getWorkMillis();
     }
 
     @Override
     protected void onCleared() {
         super.onCleared();
         cancelCountdownTick();
+        try {
+            getApplication().unregisterReceiver(stateReceiver);
+        } catch (Exception ignored) {}
     }
 }

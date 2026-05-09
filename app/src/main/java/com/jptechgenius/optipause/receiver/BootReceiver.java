@@ -11,9 +11,7 @@ import com.jptechgenius.optipause.service.TimerForegroundService;
 
 /**
  * BootReceiver
- * * Logic:
- * When device restarts, all alarms are cleared.
- * This restores the timer if it was active before reboot.
+ * Restores the timer state after a device reboot.
  */
 public class BootReceiver extends BroadcastReceiver {
 
@@ -32,6 +30,7 @@ public class BootReceiver extends BroadcastReceiver {
         TimerRepository repository = new TimerRepository(context);
         IntervalAlarmManager alarmManager = new IntervalAlarmManager(context);
 
+        // If the timer wasn't running, do nothing
         if (!repository.isRunning()) return;
 
         if (!alarmManager.canScheduleExactAlarms()) {
@@ -39,29 +38,35 @@ public class BootReceiver extends BroadcastReceiver {
             return;
         }
 
-        // Restore interval and check timing
-        long intervalMillis = repository.getIntervalMillis();
+        // FIX: Changed getIntervalMillis() to getWorkMillis() or getBreakMillis()
+        // depending on the saved mode.
+        long intervalMillis = repository.isBreakMode()
+                ? repository.getBreakMillis()
+                : repository.getWorkMillis();
+
         long nextAlarmTime = repository.getNextAlarmTime();
         long now = System.currentTimeMillis();
 
         long remaining;
         if (nextAlarmTime > now) {
-            // Restore remaining time
+            // Restore exact remaining time
             remaining = nextAlarmTime - now;
         } else {
-            // If the time passed during reboot, start a fresh cycle
+            // If time passed while phone was off, start a fresh cycle
             remaining = intervalMillis;
             repository.saveTimerState(true, now + intervalMillis, now);
         }
 
+        // Reschedule the alarm
         alarmManager.scheduleNextAlarm(remaining);
 
-        // Restart service to keep notification alive
+        // Restart the foreground service to show the notification
         Intent serviceIntent = new Intent(context, TimerForegroundService.class);
         serviceIntent.setAction(TimerForegroundService.ACTION_START);
         serviceIntent.putExtra(TimerForegroundService.EXTRA_INTERVAL_MILLIS, intervalMillis);
         context.startForegroundService(serviceIntent);
 
-        Log.d(TAG, "OptiPause state restored after reboot.");
+        Log.d(TAG, "OptiPause timer restored after reboot. Mode: " +
+                (repository.isBreakMode() ? "Break" : "Work"));
     }
 }

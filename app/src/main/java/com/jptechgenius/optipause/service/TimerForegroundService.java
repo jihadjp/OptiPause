@@ -23,6 +23,13 @@ import com.jptechgenius.optipause.alarm.IntervalAlarmManager;
 import com.jptechgenius.optipause.repository.TimerRepository;
 import com.jptechgenius.optipause.ui.MainActivity;
 
+/**
+ * TimerForegroundService
+ * Manages the Two-Stage Eye Care Cycle:
+ * 1. Work Mode: Uses user-defined work interval.
+ * 2. Alarm Mode: Continuous sound until manually dismissed.
+ * 3. Break Mode: Uses user-defined break interval, then auto-restarts work.
+ */
 public class TimerForegroundService extends Service {
 
     private static final String TAG = "TimerFgService";
@@ -33,8 +40,10 @@ public class TimerForegroundService extends Service {
     public static final String ACTION_ALARM_FIRED = "com.jptechgenius.optipause.ALARM_FIRED";
     public static final String ACTION_DISMISS_ALARM = "com.jptechgenius.optipause.DISMISS_ALARM";
 
-    // FIX: In BootReceiver the variable EXTRA_INTERVAL_MILLIS was not found
-    public static final String EXTRA_INTERVAL_MILLIS = "extra_interval_millis"; //
+    // UI Update Action
+    public static final String ACTION_STATE_CHANGED = "com.jptechgenius.optipause.STATE_CHANGED";
+
+    public static final String EXTRA_INTERVAL_MILLIS = "extra_interval_millis";
 
     private static final String CHANNEL_ID = "optipause_timer_channel";
     private static final int NOTIF_ID = 101;
@@ -54,7 +63,17 @@ public class TimerForegroundService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent == null) return START_STICKY;
+        if (intent == null) {
+            // Restore state if killed by system
+            if (repository.isRunning()) {
+                isBreakMode = repository.isBreakMode();
+                promoteToForeground(isBreakMode ? "Resting..." : "Focusing...",
+                        isBreakMode ? "Break in progress" : "Work in progress");
+            } else {
+                stopSelf();
+            }
+            return START_STICKY;
+        }
 
         String action = intent.getAction();
         if (action == null) return START_STICKY;
@@ -62,7 +81,8 @@ public class TimerForegroundService extends Service {
         switch (action) {
             case ACTION_START:
                 isBreakMode = false;
-                promoteToForeground("Focusing...", "Work in progress");
+                repository.setBreakMode(false);
+                promoteToForeground("Focusing...", "Work session started");
                 break;
 
             case ACTION_ALARM_FIRED:
@@ -83,24 +103,42 @@ public class TimerForegroundService extends Service {
 
     private void handleAlarmFired() {
         if (!isBreakMode) {
+            // Work finished -> Play looping alarm
             playAlarmSound();
             updateNotification("Time's Up!", "Take a break! Tap to stop alarm.", true);
         } else {
+            // Break finished -> Auto-restart work mode
             isBreakMode = false;
-            long workInterval = repository.getIntervalMillis();
+            repository.setBreakMode(false);
+
+            long workInterval = repository.getWorkMillis(); // Dynamic work time
+            long nextAlarm = System.currentTimeMillis() + workInterval;
+
+            // Save state for Dashboard countdown
+            repository.saveTimerState(true, nextAlarm, System.currentTimeMillis());
             alarmManager.scheduleNextAlarm(workInterval);
-            updateNotification("Break Over", "Back to work!", false);
+
+            // Notify UI to update the countdown circle
+            sendBroadcast(new Intent(ACTION_STATE_CHANGED));
+
+            updateNotification("Break Over", "Back to work! Focus session started.", false);
         }
     }
 
     private void handleDismissAndStartBreak() {
         stopAlarmSound();
         isBreakMode = true;
+        repository.setBreakMode(true); // Tell repository we are in break mode
 
-        // Manual setup for break duration (e.g., 2 minutes)
-//        long breakMillis = 2 * 60 * 1000L;
-        long breakMillis = 10 * 1000L; //for test 10 sec
+        long breakMillis = repository.getBreakMillis(); // Dynamic break time
+        long nextAlarm = System.currentTimeMillis() + breakMillis;
+
+        // Save state so MainActivity dashboard can show the break countdown
+        repository.saveTimerState(true, nextAlarm, System.currentTimeMillis());
         alarmManager.scheduleNextAlarm(breakMillis);
+
+        // Notify UI to update the countdown circle to Break Time
+        sendBroadcast(new Intent(ACTION_STATE_CHANGED));
 
         updateNotification("Break Mode", "Resting your eyes...", false);
     }
@@ -146,13 +184,15 @@ public class TimerForegroundService extends Service {
 
     private Notification buildNotification(String title, String text, boolean showDismissBtn) {
         Intent openIntent = new Intent(this, MainActivity.class);
+        openIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
         int flags = PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0);
         PendingIntent openPi = PendingIntent.getActivity(this, 0, openIntent, flags);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle(title)
                 .setContentText(text)
-                .setSmallIcon(R.drawable.ic_timer_notification)
+                .setSmallIcon(R.drawable.ic_timer_notification) // Ensure this icon exists in drawable
                 .setContentIntent(openPi)
                 .setOngoing(true)
                 .setPriority(showDismissBtn ? NotificationCompat.PRIORITY_HIGH : NotificationCompat.PRIORITY_LOW);
@@ -162,6 +202,12 @@ public class TimerForegroundService extends Service {
             dismissIntent.setAction(ACTION_DISMISS_ALARM);
             PendingIntent dismissPi = PendingIntent.getService(this, 2, dismissIntent, flags);
             builder.addAction(R.drawable.ic_stop, "Stop Alarm & Start Break", dismissPi);
+        } else {
+            // Add a Stop button to the notification to kill the service manually
+            Intent stopIntent = new Intent(this, TimerForegroundService.class);
+            stopIntent.setAction(ACTION_STOP);
+            PendingIntent stopPi = PendingIntent.getService(this, 3, stopIntent, flags);
+            builder.addAction(R.drawable.ic_stop, "Stop All", stopPi);
         }
 
         return builder.build();
@@ -169,6 +215,8 @@ public class TimerForegroundService extends Service {
 
     private void handleFullStop() {
         stopAlarmSound();
+        repository.clearTimerState();
+        sendBroadcast(new Intent(ACTION_STATE_CHANGED)); // UI-কে Stop হওয়ার সিগন্যাল দিচ্ছে
         stopForeground(true);
         stopSelf();
     }
@@ -176,6 +224,7 @@ public class TimerForegroundService extends Service {
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "OptiPause Timer", NotificationManager.IMPORTANCE_LOW);
+            channel.setShowBadge(false);
             NotificationManager nm = getSystemService(NotificationManager.class);
             if (nm != null) nm.createNotificationChannel(channel);
         }

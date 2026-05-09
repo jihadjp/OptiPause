@@ -1,8 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    bottom_sheet_settings.xml
-    Material 3 bottom sheet for configuring the reminder interval.
--->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -11,89 +7,141 @@
     android:orientation="vertical"
     android:padding="24dp">
 
-    <!-- Handle indicator (visual affordance) -->
     <View
         android:layout_width="32dp"
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="20dp"
-        android:background="@drawable/bg_bottom_sheet_handle" />
+        android:layout_marginBottom="24dp"
+        android:background="?attr/colorOutlineVariant" />
 
-    <!-- Title -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/settings_title"
+        android:text="@string/settings"
         android:textAppearance="?attr/textAppearanceTitleLarge"
         android:textColor="?attr/colorOnSurface"
         android:layout_marginBottom="24dp" />
 
-    <!-- Preset chips label -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/label_presets"
+        android:text="Work Duration"
         android:textAppearance="?attr/textAppearanceLabelLarge"
         android:textColor="?attr/colorOnSurfaceVariant"
-        android:layout_marginBottom="8dp" />
+        android:layout_marginBottom="12dp" />
 
-    <!-- Chip Group for presets -->
-    <HorizontalScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:scrollbars="none"
-        android:layout_marginBottom="24dp">
-
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chipGroupPresets"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:singleSelection="true"
-            app:selectionRequired="false" />
-
-    </HorizontalScrollView>
-
-    <!-- Custom interval label -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="8dp">
+        android:baselineAligned="false"
+        android:layout_marginBottom="24dp">
 
-        <TextView
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/label_custom"
-            android:textAppearance="?attr/textAppearanceLabelLarge"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            android:hint="Minutes">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etWorkMin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:maxLength="3" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
-            android:id="@+id/tvIntervalValue"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="20 minutes"
-            android:textAppearance="?attr/textAppearanceLabelLarge"
-            android:textColor="?attr/colorPrimary" />
+            android:text=":"
+            android:textSize="24sp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginHorizontal="12dp"
+            android:textStyle="bold"
+            android:textColor="?attr/colorOnSurface" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Seconds">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etWorkSec"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:maxLength="2" />
+        </com.google.android.material.textfield.TextInputLayout>
 
     </LinearLayout>
 
-    <!-- SeekBar 1–120 minutes -->
-    <SeekBar
-        android:id="@+id/seekbarInterval"
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Break Duration"
+        android:textAppearance="?attr/textAppearanceLabelLarge"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:layout_marginBottom="12dp" />
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:max="119"
-        android:progress="19"
-        android:layout_marginBottom="32dp" />
+        android:orientation="horizontal"
+        android:baselineAligned="false"
+        android:layout_marginBottom="32dp">
 
-    <!-- Apply button -->
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Minutes">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etBreakMin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:maxLength="3" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=":"
+            android:textSize="24sp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginHorizontal="12dp"
+            android:textStyle="bold"
+            android:textColor="?attr/colorOnSurface" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Seconds">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etBreakSec"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:maxLength="2" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+    </LinearLayout>
+
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnApply"
+        style="@style/Widget.Material3.Button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/apply"
-        style="@style/Widget.Material3.Button" />
+        android:paddingVertical="12dp"
+        android:text="Apply Changes" />
 
 </LinearLayout>

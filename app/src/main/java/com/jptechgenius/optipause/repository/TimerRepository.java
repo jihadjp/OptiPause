@@ -7,24 +7,25 @@ import android.content.SharedPreferences;
  * TimerRepository
  *
  * The single source of truth for persisted user settings and timer state.
- * Uses SharedPreferences so data survives app kills and device reboots.
- *
- * Keys stored:
- *  KEY_INTERVAL_MILLIS  — user-selected interval in milliseconds (default 20 min)
- *  KEY_IS_RUNNING       — whether the timer was active when last saved
- *  KEY_NEXT_ALARM_TIME  — absolute epoch ms of the next scheduled alarm
- *  KEY_START_TIME       — epoch ms when the current interval began
+ * Modified to support dynamic Work and Break intervals for eye care.
  */
 public class TimerRepository {
 
-    private static final String PREFS_NAME   = "optipause_prefs";
-    private static final String KEY_INTERVAL = "interval_millis";
-    private static final String KEY_RUNNING  = "is_running";
-    private static final String KEY_NEXT_ALARM  = "next_alarm_time";
-    private static final String KEY_START_TIME  = "start_time";
+    private static final String PREFS_NAME = "optipause_prefs";
 
-    /** Default interval: 20 minutes in milliseconds. */
-    public static final long DEFAULT_INTERVAL_MILLIS = 20 * 60 * 1000L;
+    // Settings Keys
+    private static final String KEY_WORK_MILLIS = "interval_millis";
+    private static final String KEY_BREAK_MILLIS = "break_millis";
+
+    // State Keys
+    private static final String KEY_RUNNING = "is_running";
+    private static final String KEY_NEXT_ALARM = "next_alarm_time";
+    private static final String KEY_START_TIME = "start_time";
+    private static final String KEY_IS_BREAK_MODE = "is_break_mode";
+
+    /** Default intervals: 20 minutes Work, 2 minutes Break. */
+    public static final long DEFAULT_WORK_MILLIS = 20 * 60 * 1000L;
+    public static final long DEFAULT_BREAK_MILLIS = 2 * 60 * 1000L;
 
     private final SharedPreferences prefs;
 
@@ -34,21 +35,31 @@ public class TimerRepository {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Interval
+    // User Settings (Work & Break Durations)
     // ─────────────────────────────────────────────────────────────────────────
 
-    /** Persists the user-selected alarm interval. */
-    public void saveIntervalMillis(long millis) {
-        prefs.edit().putLong(KEY_INTERVAL, millis).apply();
+    /** Persists the user-selected work interval. */
+    public void saveWorkMillis(long millis) {
+        prefs.edit().putLong(KEY_WORK_MILLIS, millis).apply();
     }
 
-    /** Retrieves the saved interval, defaulting to 20 minutes. */
-    public long getIntervalMillis() {
-        return prefs.getLong(KEY_INTERVAL, DEFAULT_INTERVAL_MILLIS);
+    /** Retrieves the saved work interval, defaulting to 20 minutes. */
+    public long getWorkMillis() {
+        return prefs.getLong(KEY_WORK_MILLIS, DEFAULT_WORK_MILLIS);
+    }
+
+    /** Persists the user-selected break interval. */
+    public void saveBreakMillis(long millis) {
+        prefs.edit().putLong(KEY_BREAK_MILLIS, millis).apply();
+    }
+
+    /** Retrieves the saved break interval, defaulting to 2 minutes. */
+    public long getBreakMillis() {
+        return prefs.getLong(KEY_BREAK_MILLIS, DEFAULT_BREAK_MILLIS);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Running state
+    // Timer State (For Dashboard & Reboot Recovery)
     // ─────────────────────────────────────────────────────────────────────────
 
     /** Records whether the timer is currently active. */
@@ -61,9 +72,15 @@ public class TimerRepository {
         return prefs.getBoolean(KEY_RUNNING, false);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Alarm timing
-    // ─────────────────────────────────────────────────────────────────────────
+    /** Tracks if the current countdown is for a Break or Work. */
+    public void setBreakMode(boolean isBreak) {
+        prefs.edit().putBoolean(KEY_IS_BREAK_MODE, isBreak).apply();
+    }
+
+    /** Returns true if the current active timer is a break. */
+    public boolean isBreakMode() {
+        return prefs.getBoolean(KEY_IS_BREAK_MODE, false);
+    }
 
     /** Saves the absolute system time (ms) at which the next alarm will fire. */
     public void saveNextAlarmTime(long epochMillis) {
@@ -90,8 +107,8 @@ public class TimerRepository {
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Atomically saves all fields needed to restore state after a reboot.
-     * Uses a single edit/apply for efficiency.
+     * Atomically saves all fields needed to restore state after a reboot or app kill.
+     * Use this whenever a new interval (Work or Break) starts.
      */
     public void saveTimerState(boolean running, long nextAlarmTime, long startTime) {
         prefs.edit()
@@ -101,12 +118,13 @@ public class TimerRepository {
                 .apply();
     }
 
-    /** Clears all timer runtime state (but keeps the saved interval preference). */
+    /** Clears all timer runtime state (keeps user preferences like work/break durations). */
     public void clearTimerState() {
         prefs.edit()
                 .remove(KEY_RUNNING)
                 .remove(KEY_NEXT_ALARM)
                 .remove(KEY_START_TIME)
+                .remove(KEY_IS_BREAK_MODE)
                 .apply();
     }
 }
