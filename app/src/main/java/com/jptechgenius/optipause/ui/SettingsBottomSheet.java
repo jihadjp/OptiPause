@@ -17,69 +17,49 @@ import com.jptechgenius.optipause.databinding.BottomSheetSettingsBinding;
 /**
  * SettingsBottomSheet
  *
- * A Material 3 BottomSheetDialogFragment that lets the user configure:
- *  - A custom interval via a SeekBar (1–120 minutes)
- *  - Preset intervals via Chips: 5, 10, 15, 20, 30, 45, 60 minutes
- *
- * The host Activity/Fragment implements {@link OnIntervalSelectedListener}
- * to receive the result.
+ * Modified to support 30 seconds interval along with minutes.
  */
 public class SettingsBottomSheet extends BottomSheetDialogFragment {
 
     public static final String TAG = "SettingsBottomSheet";
 
-    // ─── Preset options (minutes) ─────────────────────────────────────────────
-    private static final int[] PRESETS = {5, 10, 15, 20, 30, 45, 60};
+    // Preset values in seconds: 30s, 1m, 5m, 10m, 15m, 20m, 30m, 45m, 60m
+    private static final int[] PRESETS_SECONDS = {30, 60, 300, 600, 900, 1200, 1800, 2700, 3600};
 
-    // ─── Argument key ─────────────────────────────────────────────────────────
-    private static final String ARG_CURRENT_MINUTES = "current_minutes";
+    private static final String ARG_CURRENT_SECONDS = "current_seconds";
 
-    // ─── Callback interface ───────────────────────────────────────────────────
     public interface OnIntervalSelectedListener {
-        void onIntervalSelected(int minutes);
+        // Return result in minutes (float) or you can change your logic to seconds
+        void onIntervalSelected(int seconds);
     }
 
     private BottomSheetSettingsBinding binding;
     private OnIntervalSelectedListener listener;
-    private int currentMinutes = 20;
+    private int currentSeconds = 1200; // Default 20 mins
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Factory
-    // ─────────────────────────────────────────────────────────────────────────
-
-    public static SettingsBottomSheet newInstance(int currentMinutes) {
+    public static SettingsBottomSheet newInstance(int currentSeconds) {
         SettingsBottomSheet sheet = new SettingsBottomSheet();
         Bundle args = new Bundle();
-        args.putInt(ARG_CURRENT_MINUTES, currentMinutes);
+        args.putInt(ARG_CURRENT_SECONDS, currentSeconds);
         sheet.setArguments(args);
         return sheet;
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Listener registration
-    // ─────────────────────────────────────────────────────────────────────────
 
     public void setOnIntervalSelectedListener(OnIntervalSelectedListener listener) {
         this.listener = listener;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Lifecycle
-    // ─────────────────────────────────────────────────────────────────────────
-
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            currentMinutes = getArguments().getInt(ARG_CURRENT_MINUTES, 20);
+            currentSeconds = getArguments().getInt(ARG_CURRENT_SECONDS, 1200);
         }
     }
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         binding = BottomSheetSettingsBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
@@ -90,7 +70,7 @@ public class SettingsBottomSheet extends BottomSheetDialogFragment {
         setupPresetChips();
         setupSeekBar();
         setupApplyButton();
-        updateLabel(currentMinutes);
+        updateLabel(currentSeconds);
     }
 
     @Override
@@ -99,25 +79,25 @@ public class SettingsBottomSheet extends BottomSheetDialogFragment {
         binding = null;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Setup
-    // ─────────────────────────────────────────────────────────────────────────
-
     private void setupPresetChips() {
         ChipGroup chipGroup = binding.chipGroupPresets;
-        for (int minutes : PRESETS) {
+        for (int seconds : PRESETS_SECONDS) {
             Chip chip = new Chip(requireContext());
-            chip.setText(minutes + " min");
+            if (seconds < 60) {
+                chip.setText(seconds + " sec");
+            } else {
+                chip.setText((seconds / 60) + " min");
+            }
+
             chip.setCheckable(true);
-            chip.setChecked(minutes == currentMinutes);
-            chip.setTag(minutes);
+            chip.setChecked(seconds == currentSeconds);
+            chip.setTag(seconds);
             chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if (isChecked) {
-                    int selected = (int) chip.getTag();
-                    currentMinutes = selected;
-                    // Sync seekbar without triggering its listener
-                    binding.seekbarInterval.setProgress(selected - 1);
-                    updateLabel(selected);
+                    currentSeconds = (int) chip.getTag();
+                    // Sync seekbar: Here 1 unit in seekbar = 30 seconds
+                    binding.seekbarInterval.setProgress((currentSeconds / 30) - 1);
+                    updateLabel(currentSeconds);
                 }
             });
             chipGroup.addView(chip);
@@ -125,21 +105,19 @@ public class SettingsBottomSheet extends BottomSheetDialogFragment {
     }
 
     private void setupSeekBar() {
-        // Range: 1–120 minutes (SeekBar: 0–119)
-        binding.seekbarInterval.setMax(119);
-        binding.seekbarInterval.setProgress(currentMinutes - 1);
+        // Seekbar Range: 1 to 240 (Step of 30s, so max is 120 mins = 7200s / 30 = 240 steps)
+        binding.seekbarInterval.setMax(239);
+        binding.seekbarInterval.setProgress((currentSeconds / 30) - 1);
 
         binding.seekbarInterval.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser) {
-                    int minutes = progress + 1;
-                    currentMinutes = minutes;
-                    updateLabel(minutes);
+                    currentSeconds = (progress + 1) * 30;
+                    updateLabel(currentSeconds);
                     uncheckAllChips();
                 }
             }
-
             @Override public void onStartTrackingTouch(SeekBar seekBar) {}
             @Override public void onStopTrackingTouch(SeekBar seekBar) {}
         });
@@ -148,24 +126,24 @@ public class SettingsBottomSheet extends BottomSheetDialogFragment {
     private void setupApplyButton() {
         binding.btnApply.setOnClickListener(v -> {
             if (listener != null) {
-                listener.onIntervalSelected(currentMinutes);
+                listener.onIntervalSelected(currentSeconds);
             }
             dismiss();
         });
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // UI helpers
-    // ─────────────────────────────────────────────────────────────────────────
-
-    private void updateLabel(int minutes) {
+    private void updateLabel(int totalSeconds) {
         if (binding == null) return;
         String label;
-        if (minutes < 60) {
-            label = minutes + " minute" + (minutes == 1 ? "" : "s");
+        if (totalSeconds < 60) {
+            label = totalSeconds + " seconds";
+        } else if (totalSeconds < 3600) {
+            int m = totalSeconds / 60;
+            int s = totalSeconds % 60;
+            label = m + " min" + (s > 0 ? " " + s + "s" : "");
         } else {
-            int h = minutes / 60;
-            int m = minutes % 60;
+            int h = totalSeconds / 3600;
+            int m = (totalSeconds % 3600) / 60;
             label = h + "h" + (m > 0 ? " " + m + "m" : "");
         }
         binding.tvIntervalValue.setText(label);
