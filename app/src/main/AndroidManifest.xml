@@ -1,45 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.jptechgenius.optipause">
+    package="com.jptechgenius.optipause" >
 
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         PERMISSIONS
-         ═══════════════════════════════════════════════════════════════════════ -->
-
-    <!-- Wake up the CPU when the alarm fires -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-    <!-- Required to schedule exact alarms on Android 12+ (API 31+).
-         The user must also grant this via Settings > Apps > Special App Access
-         > Alarms & Reminders on Android 12+.
-         On Android 14 (API 34), this is automatically granted for clock/alarm apps;
-         for other app categories use SCHEDULE_EXACT_ALARM. -->
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
+
+    <uses-permission
+        android:name="android.permission.SCHEDULE_EXACT_ALARM"
         tools:ignore="ExactAlarm" />
 
-    <!-- Fallback permission available without user approval on API 33+
-         for apps that don't qualify as clock/alarm apps -->
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 
-    <!-- Run the foreground timer service -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
-    <!-- API 34: declare foreground service type -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
-    <!-- Reschedule alarms after device reboot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
-    <!-- Play alarm sound / vibrate -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
-    <!-- Show notifications (Android 13+ requires explicit user grant) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         APPLICATION
-         ═══════════════════════════════════════════════════════════════════════ -->
 
     <application
         android:name=".OptiPauseApplication"
@@ -49,44 +32,45 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.OptiPause"
-        tools:targetApi="34">
+        tools:targetApi="34" >
 
-        <!-- ── Main Activity ─────────────────────────────────────────────── -->
+        <activity
+            android:name=".ui.FullScreenAlarmActivity"
+            android:exported="false"
+            android:showOnLockScreen="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.OptiPause" />
+
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- ── Foreground Service ────────────────────────────────────────── -->
-        <!-- foregroundServiceType="dataSync" is required on API 34 to keep
-             the service alive while the timer runs in the background. -->
         <service
             android:name=".service.TimerForegroundService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
-        <!-- ── Alarm BroadcastReceiver ───────────────────────────────────── -->
-        <!-- exported="false": only AlarmManager (same UID path) needs to send this -->
         <receiver
             android:name=".receiver.AlarmReceiver"
-            android:exported="false">
+            android:exported="false" >
             <intent-filter>
                 <action android:name="com.jptechgenius.optipause.ACTION_INTERVAL_ALARM" />
             </intent-filter>
         </receiver>
 
-        <!-- ── Boot BroadcastReceiver ────────────────────────────────────── -->
         <receiver
             android:name=".receiver.BootReceiver"
-            android:exported="true">
+            android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <!-- HTC devices use a custom QUICKBOOT action -->
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>

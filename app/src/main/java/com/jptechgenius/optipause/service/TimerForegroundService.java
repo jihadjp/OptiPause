@@ -8,11 +8,14 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
-import android.media.Ringtone;
+import android.media.AudioAttributes;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
+import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -21,36 +24,25 @@ import androidx.core.app.NotificationCompat;
 import com.jptechgenius.optipause.R;
 import com.jptechgenius.optipause.alarm.IntervalAlarmManager;
 import com.jptechgenius.optipause.repository.TimerRepository;
+import com.jptechgenius.optipause.ui.FullScreenAlarmActivity;
 import com.jptechgenius.optipause.ui.MainActivity;
 
-/**
- * TimerForegroundService
- * Manages the Two-Stage Eye Care Cycle:
- * 1. Work Mode: Uses user-defined work interval.
- * 2. Alarm Mode: Continuous sound until manually dismissed.
- * 3. Break Mode: Uses user-defined break interval, then auto-restarts work.
- */
 public class TimerForegroundService extends Service {
 
     private static final String TAG = "TimerFgService";
 
-    // Intent Actions
     public static final String ACTION_START = "com.jptechgenius.optipause.START_SERVICE";
     public static final String ACTION_STOP = "com.jptechgenius.optipause.STOP_SERVICE";
     public static final String ACTION_ALARM_FIRED = "com.jptechgenius.optipause.ALARM_FIRED";
     public static final String ACTION_DISMISS_ALARM = "com.jptechgenius.optipause.DISMISS_ALARM";
-
-    // UI Update Action
     public static final String ACTION_STATE_CHANGED = "com.jptechgenius.optipause.STATE_CHANGED";
-
     public static final String EXTRA_INTERVAL_MILLIS = "extra_interval_millis";
-
-    private static final String CHANNEL_ID = "optipause_timer_channel";
+    private static final String CHANNEL_ID = "optipause_timer_channel_high";
     private static final int NOTIF_ID = 101;
 
     private TimerRepository repository;
     private IntervalAlarmManager alarmManager;
-    private Ringtone ringtone;
+    private MediaPlayer mediaPlayer;
     private boolean isBreakMode = false;
 
     @Override
@@ -64,7 +56,6 @@ public class TimerForegroundService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent == null) {
-            // Restore state if killed by system
             if (repository.isRunning()) {
                 isBreakMode = repository.isBreakMode();
                 promoteToForeground(isBreakMode ? "Resting..." : "Focusing...",
@@ -76,93 +67,79 @@ public class TimerForegroundService extends Service {
         }
 
         String action = intent.getAction();
-        if (action == null) return START_STICKY;
-
-        switch (action) {
-            case ACTION_START:
-                isBreakMode = false;
-                repository.setBreakMode(false);
-                promoteToForeground("Focusing...", "Work session started");
-                break;
-
-            case ACTION_ALARM_FIRED:
-                handleAlarmFired();
-                break;
-
-            case ACTION_DISMISS_ALARM:
-                handleDismissAndStartBreak();
-                break;
-
-            case ACTION_STOP:
-                handleFullStop();
-                break;
+        if (ACTION_START.equals(action)) {
+            isBreakMode = false;
+            repository.setBreakMode(false);
+            promoteToForeground("Focusing...", "Work session started");
+        } else if (ACTION_ALARM_FIRED.equals(action)) {
+            handleAlarmFired();
+        } else if (ACTION_DISMISS_ALARM.equals(action)) {
+            handleDismissAndStartBreak();
+        } else if (ACTION_STOP.equals(action)) {
+            handleFullStop();
         }
-
         return START_STICKY;
     }
 
     private void handleAlarmFired() {
         if (!isBreakMode) {
-            // Work finished -> Play looping alarm
-            playAlarmSound();
+            playSound(repository.getWorkTone(), true, true);
+            // Time's Up holei updateNotification call hobe ja Full Screen Activity trigger korbe
             updateNotification("Time's Up!", "Take a break! Tap to stop alarm.", true);
         } else {
-            // Break finished -> Auto-restart work mode
+            playSound(repository.getBreakTone(), false, false);
             isBreakMode = false;
             repository.setBreakMode(false);
-
-            long workInterval = repository.getWorkMillis(); // Dynamic work time
+            long workInterval = repository.getWorkMillis();
             long nextAlarm = System.currentTimeMillis() + workInterval;
-
-            // Save state for Dashboard countdown
             repository.saveTimerState(true, nextAlarm, System.currentTimeMillis());
             alarmManager.scheduleNextAlarm(workInterval);
-
-            // Notify UI to update the countdown circle
             sendBroadcast(new Intent(ACTION_STATE_CHANGED));
-
-            updateNotification("Break Over", "Back to work! Focus session started.", false);
+            updateNotification("Break Over", "Back to work!", false);
         }
     }
 
     private void handleDismissAndStartBreak() {
         stopAlarmSound();
         isBreakMode = true;
-        repository.setBreakMode(true); // Tell repository we are in break mode
-
-        long breakMillis = repository.getBreakMillis(); // Dynamic break time
+        repository.setBreakMode(true);
+        long breakMillis = repository.getBreakMillis();
         long nextAlarm = System.currentTimeMillis() + breakMillis;
-
-        // Save state so MainActivity dashboard can show the break countdown
         repository.saveTimerState(true, nextAlarm, System.currentTimeMillis());
         alarmManager.scheduleNextAlarm(breakMillis);
-
-        // Notify UI to update the countdown circle to Break Time
         sendBroadcast(new Intent(ACTION_STATE_CHANGED));
-
         updateNotification("Break Mode", "Resting your eyes...", false);
     }
 
-    private void playAlarmSound() {
+    private void playSound(String uriString, boolean isAlarmType, boolean isLooping) {
+        stopAlarmSound();
         try {
-            Uri alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-            if (alert == null) alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+            Uri alertUri = TextUtils.isEmpty(uriString) ?
+                    RingtoneManager.getDefaultUri(isAlarmType ? RingtoneManager.TYPE_ALARM : RingtoneManager.TYPE_NOTIFICATION) :
+                    Uri.parse(uriString);
 
-            ringtone = RingtoneManager.getRingtone(getApplicationContext(), alert);
-            if (ringtone != null) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    ringtone.setLooping(true);
-                }
-                ringtone.play();
-            }
+            mediaPlayer = new MediaPlayer();
+            mediaPlayer.setDataSource(this, alertUri);
+            AudioAttributes attr = new AudioAttributes.Builder()
+                    .setUsage(isAlarmType ? AudioAttributes.USAGE_ALARM : AudioAttributes.USAGE_NOTIFICATION)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build();
+            mediaPlayer.setAudioAttributes(attr);
+            mediaPlayer.setLooping(isLooping);
+            mediaPlayer.prepare();
+            mediaPlayer.start();
         } catch (Exception e) {
-            Log.e(TAG, "Error playing sound", e);
+            Log.e(TAG, "Sound play error", e);
         }
     }
 
     private void stopAlarmSound() {
-        if (ringtone != null && ringtone.isPlaying()) {
-            ringtone.stop();
+        if (mediaPlayer != null) {
+            try {
+                if (mediaPlayer.isPlaying()) mediaPlayer.stop();
+                mediaPlayer.release();
+            } catch (Exception ignored) {}
+            mediaPlayer = null;
         }
     }
 
@@ -175,56 +152,62 @@ public class TimerForegroundService extends Service {
         }
     }
 
-    private void updateNotification(String title, String text, boolean showDismissBtn) {
-        NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        if (nm != null) {
-            nm.notify(NOTIF_ID, buildNotification(title, text, showDismissBtn));
-        }
+    private void updateNotification(String title, String text, boolean showDismiss) {
+        NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        if (nm != null) nm.notify(NOTIF_ID, buildNotification(title, text, showDismiss));
     }
+
 
     private Notification buildNotification(String title, String text, boolean showDismissBtn) {
         Intent openIntent = new Intent(this, MainActivity.class);
-        openIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
         int flags = PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0);
         PendingIntent openPi = PendingIntent.getActivity(this, 0, openIntent, flags);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle(title)
                 .setContentText(text)
-                .setSmallIcon(R.drawable.ic_timer_notification) // Ensure this icon exists in drawable
+                .setSmallIcon(R.drawable.ic_timer_notification)
                 .setContentIntent(openPi)
                 .setOngoing(true)
-                .setPriority(showDismissBtn ? NotificationCompat.PRIORITY_HIGH : NotificationCompat.PRIORITY_LOW);
+                .setCategory(NotificationCompat.CATEGORY_ALARM) // এটাকে অ্যালার্ম ক্যাটাগরি করা হলো
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC); // লক স্ক্রিনে যেন দেখা যায়
 
         if (showDismissBtn) {
-            Intent dismissIntent = new Intent(this, TimerForegroundService.class);
-            dismissIntent.setAction(ACTION_DISMISS_ALARM);
-            PendingIntent dismissPi = PendingIntent.getService(this, 2, dismissIntent, flags);
-            builder.addAction(R.drawable.ic_stop, "Stop Alarm & Start Break", dismissPi);
-        } else {
-            // Add a Stop button to the notification to kill the service manually
-            Intent stopIntent = new Intent(this, TimerForegroundService.class);
-            stopIntent.setAction(ACTION_STOP);
-            PendingIntent stopPi = PendingIntent.getService(this, 3, stopIntent, flags);
-            builder.addAction(R.drawable.ic_stop, "Stop All", stopPi);
-        }
+            Log.d("OPTIPAUSE_DEBUG", "Triggering Full Screen Intent now...");
 
+            // Full Screen Intent setup
+            Intent fsIntent = new Intent(this, FullScreenAlarmActivity.class);
+            fsIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_USER_ACTION);
+            PendingIntent fsPi = PendingIntent.getActivity(this, 4, fsIntent, flags);
+
+            builder.setFullScreenIntent(fsPi, true); // এই লাইনটিই পপআপ ওপেন করে
+            builder.setPriority(NotificationCompat.PRIORITY_MAX); // প্রিওরিটি অবশ্যই MAX হতে হবে
+
+            Intent dIntent = new Intent(this, TimerForegroundService.class).setAction(ACTION_DISMISS_ALARM);
+            PendingIntent dPi = PendingIntent.getService(this, 2, dIntent, flags);
+            builder.addAction(R.drawable.ic_stop, "Stop Alarm & Start Break", dPi);
+        } else {
+            builder.setPriority(NotificationCompat.PRIORITY_LOW);
+            Intent sIntent = new Intent(this, TimerForegroundService.class).setAction(ACTION_STOP);
+            PendingIntent sPi = PendingIntent.getService(this, 3, sIntent, flags);
+            builder.addAction(R.drawable.ic_stop, "Stop All", sPi);
+        }
         return builder.build();
     }
 
     private void handleFullStop() {
         stopAlarmSound();
         repository.clearTimerState();
-        sendBroadcast(new Intent(ACTION_STATE_CHANGED)); // UI-কে Stop হওয়ার সিগন্যাল দিচ্ছে
+        sendBroadcast(new Intent(ACTION_STATE_CHANGED));
         stopForeground(true);
         stopSelf();
     }
 
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "OptiPause Timer", NotificationManager.IMPORTANCE_LOW);
-            channel.setShowBadge(false);
+            // Importance oboshshoi HIGH hote hobe popup ashonor jonno
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "OptiPause Timer", NotificationManager.IMPORTANCE_HIGH);
+            channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
             NotificationManager nm = getSystemService(NotificationManager.class);
             if (nm != null) nm.createNotificationChannel(channel);
         }

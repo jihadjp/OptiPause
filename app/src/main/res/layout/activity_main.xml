@@ -1,28 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    activity_main.xml
-    Material 3 main screen for OptiPause.
-
-    Layout:
-      ┌──────────────────────────────┐
-      │  Toolbar (title + settings)  │
-      ├──────────────────────────────┤
-      │                              │
-      │   ╔══════════════════════╗   │
-      │   ║  Circular Progress   ║   │
-      │   ║   ┌──────────────┐   ║   │
-      │   ║   │  MM : SS     │   ║   │
-      │   ║   │  countdown   │   ║   │
-      │   ║   └──────────────┘   ║   │
-      │   ╚══════════════════════╝   │
-      │                              │
-      │    20 min interval  (chip)   │
-      │    ● Running                 │
-      │                              │
-      │    [ ▶ Start Timer ]  (FAB)  │
-      │    [  ⚙ Settings  ]  (btn)  │
-      └──────────────────────────────┘
--->
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -30,58 +6,60 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSurface"
+    android:fitsSystemWindows="true"
     tools:context=".ui.MainActivity">
 
-    <!-- ── App Bar ───────────────────────────────────────────────────────── -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        app:elevation="0dp"
+        android:fitsSystemWindows="true">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:title="@string/app_name"
+            app:titleCentered="true"
             app:menu="@menu/menu_main"
             app:navigationIcon="@null" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- ── Scrollable Content ────────────────────────────────────────────── -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:fillViewport="true"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp"
-            android:gravity="center_horizontal">
+            android:paddingHorizontal="24dp"
+            android:paddingVertical="16dp"
+            android:gravity="center">
 
-            <!-- ── Progress + Countdown ──────────────────────────────────── -->
             <FrameLayout
-                android:layout_width="240dp"
-                android:layout_height="240dp"
-                android:layout_marginTop="32dp"
-                android:layout_marginBottom="32dp">
+                android:layout_width="280dp"
+                android:layout_height="280dp"
+                android:layout_marginBottom="40dp">
 
-                <!-- Circular progress ring (Material 3) -->
                 <com.google.android.material.progressindicator.CircularProgressIndicator
                     android:id="@+id/progressCircular"
-                    android:layout_width="240dp"
-                    android:layout_height="240dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:layout_gravity="center"
-                    app:indicatorSize="240dp"
-                    app:trackThickness="12dp"
+                    app:indicatorSize="280dp"
+                    app:trackThickness="16dp"
+                    app:trackCornerRadius="8dp"
                     app:indicatorColor="?attr/colorPrimary"
                     app:trackColor="?attr/colorSurfaceVariant"
                     android:progress="0"
                     android:max="100" />
 
-                <!-- Countdown text centred inside the ring -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -93,8 +71,9 @@
                         android:id="@+id/tvCountdown"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textAppearance="?attr/textAppearanceDisplayMedium"
-                        android:textColor="?attr/colorOnSurface"
+                        android:textAppearance="?attr/textAppearanceDisplayLarge"
+                        android:textColor="?attr/colorPrimary"
+                        android:textStyle="bold"
                         android:fontFamily="@font/roboto_mono"
                         android:text="20:00"
                         tools:text="19:42" />
@@ -103,50 +82,43 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/label_remaining"
-                        android:textAppearance="?attr/textAppearanceLabelSmall"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:layout_marginTop="4dp" />
 
                 </LinearLayout>
             </FrameLayout>
 
-            <!-- ── Interval chip ─────────────────────────────────────────── -->
             <com.google.android.material.chip.Chip
                 android:id="@+id/tvInterval"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="20 min interval"
                 app:chipIcon="@drawable/ic_interval"
-                android:layout_marginBottom="8dp"
+                app:chipCornerRadius="16dp"
+                android:layout_marginBottom="16dp"
                 style="@style/Widget.Material3.Chip.Assist" />
 
-            <!-- ── Status label ──────────────────────────────────────────── -->
             <TextView
                 android:id="@+id/tvStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/status_idle"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:textColor="?attr/colorOnSurfaceVariant"
-                android:layout_marginBottom="40dp" />
+                android:layout_marginBottom="48dp" />
 
-            <!-- ── Start / Stop FAB ──────────────────────────────────────── -->
             <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
                 android:id="@+id/btnStartStop"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_height="64dp"
+                android:layout_marginBottom="24dp"
+                android:paddingHorizontal="32dp"
                 android:text="@string/start_timer"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
                 app:icon="@drawable/ic_play"
+                app:iconSize="24dp"
                 style="@style/Widget.Material3.ExtendedFloatingActionButton.Primary" />
-
-            <!-- ── Settings button ───────────────────────────────────────── -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSettings"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/settings"
-                app:icon="@drawable/ic_settings"
-                style="@style/Widget.Material3.Button.TonalButton" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

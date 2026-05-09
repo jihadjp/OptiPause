@@ -47,6 +47,23 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         viewModel.refreshPermissionState();
+
+        // Android 14 (API 34) Full Screen Intent Permission Check
+        if (Build.VERSION.SDK_INT >= 34) { // 34 = UPSIDE_DOWN_CAKE
+            android.app.NotificationManager nm = getSystemService(android.app.NotificationManager.class);
+            if (nm != null && !nm.canUseFullScreenIntent()) {
+                new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                        .setTitle("Full Screen Permission Required")
+                        .setMessage("To wake up your screen during eye breaks, please allow Full Screen Intents.")
+                        .setPositiveButton("Allow", (dialog, which) -> {
+                            Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT);
+                            intent.setData(Uri.parse("package:" + getPackageName()));
+                            startActivity(intent);
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            }
+        }
     }
 
     @Override
@@ -136,9 +153,6 @@ public class MainActivity extends AppCompatActivity {
             return false;
         });
 
-        if (binding.btnSettings != null) {
-            binding.btnSettings.setOnClickListener(v -> openSettings());
-        }
     }
 
     private void openSettings() {
