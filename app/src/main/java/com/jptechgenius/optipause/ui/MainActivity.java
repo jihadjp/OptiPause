@@ -267,6 +267,14 @@ public class MainActivity extends AppCompatActivity {
             viewModel.toggleTimer();
         });
 
+        // Info Button Click Listener
+        binding.btnTipInfo.setOnClickListener(v -> {
+            if (getSupportFragmentManager().findFragmentByTag(InfoBottomSheet.TAG) == null) {
+                InfoBottomSheet infoSheet = new InfoBottomSheet();
+                infoSheet.show(getSupportFragmentManager(), InfoBottomSheet.TAG);
+            }
+        });
+
         binding.toolbar.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.action_settings) {
 

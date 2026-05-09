@@ -27,6 +27,7 @@
     <string name="perm_open_settings">Open Settings</string>
     <string name="perm_cancel">Cancel</string>
 
+    <string name="developer_about_content">I am a passionate Full-Stack Developer with expertise in creating user-friendly and innovative mobile and web applications. I strive to build solutions that make everyday tasks easier and more enjoyable for users around the world.</string>
 
     <string name="status_running_work">Work Mode · Focusing</string>
     <string name="status_running_break">Break Mode · Resting</string>

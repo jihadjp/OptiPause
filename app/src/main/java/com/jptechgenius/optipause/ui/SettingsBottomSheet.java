@@ -38,6 +38,7 @@ public class SettingsBottomSheet extends BottomSheetDialogFragment {
     private String tempWorkTone = "";
     private String tempBreakTone = "";
     private boolean isPickingWorkTone = true;
+    private static final String URL_PRIVACY_POLICY = "https://jihadjp.github.io/optipause-privacy-policy";
 
     // 1. Launcher for File Manager (Custom Audio)
     private final ActivityResultLauncher<String[]> filePickerLauncher = registerForActivityResult(
@@ -116,6 +117,19 @@ public class SettingsBottomSheet extends BottomSheetDialogFragment {
             viewModel.refreshStateFromSettings();
             dismiss();
         });
+
+        binding.btnPrivacyPolicy.setOnClickListener(v -> openUrl(URL_PRIVACY_POLICY));
+
+    }
+
+
+    private void openUrl(String url) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(requireContext(), "Cannot open link.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     // popup dialog to choose between File Manager or Ringtone

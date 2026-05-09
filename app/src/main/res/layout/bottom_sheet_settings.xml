@@ -33,8 +33,20 @@
                 android:layout_height="wrap_content"
                 android:text="@string/settings"
                 android:textAppearance="@style/TextAppearance.OptiPause.ToolbarTitle"
-                android:textColor="?attr/colorOnSurface"
-                android:layout_marginBottom="24dp" />
+                android:textColor="?attr/colorOnSurface"/>
+
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPrivacyPolicy"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginBottom="24dp"
+                android:text="Privacy Policy"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textAppearance="?attr/textAppearanceBodySmall" />
+
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
@@ -307,6 +319,7 @@
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
+
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnApply"
