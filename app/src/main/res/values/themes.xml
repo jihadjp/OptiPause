@@ -1,55 +1,143 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    themes.xml
-    Material 3 DayNight theme for OptiPause.
-    Uses dynamic color on Android 12+ (Monet), falling back to the
-    seed color (#4CAF50 — a calm green) on older devices.
--->
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Base application theme -->
-    <style name="Theme.OptiPause" parent="Theme.Material3.DayNight.NoActionBar">
+    <!-- ═══════════════════════════════════════════════════════════════
+         BASE APPLICATION THEME  —  Material3 Dark (forced, design intent)
+         ═══════════════════════════════════════════════════════════════ -->
+    <style name="Theme.OptiPause" parent="Theme.Material3.Dark.NoActionBar">
 
-        <!-- ── Primary brand color ──────────────────────────────────────── -->
-        <!-- On API 31+ these are overridden at runtime by dynamic color.   -->
-        <item name="colorPrimary">@color/md_theme_light_primary</item>
-        <item name="colorOnPrimary">@color/md_theme_light_onPrimary</item>
-        <item name="colorPrimaryContainer">@color/md_theme_light_primaryContainer</item>
-        <item name="colorOnPrimaryContainer">@color/md_theme_light_onPrimaryContainer</item>
+        <!-- Primary brand -->
+        <item name="colorPrimary">@color/md_theme_dark_primary</item>
+        <item name="colorOnPrimary">@color/md_theme_dark_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/md_theme_dark_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/md_theme_dark_onPrimaryContainer</item>
 
-        <!-- ── Secondary ────────────────────────────────────────────────── -->
-        <item name="colorSecondary">@color/md_theme_light_secondary</item>
-        <item name="colorOnSecondary">@color/md_theme_light_onSecondary</item>
-        <item name="colorSecondaryContainer">@color/md_theme_light_secondaryContainer</item>
-        <item name="colorOnSecondaryContainer">@color/md_theme_light_onSecondaryContainer</item>
+        <!-- Secondary -->
+        <item name="colorSecondary">@color/md_theme_dark_secondary</item>
+        <item name="colorOnSecondary">@color/md_theme_dark_onSecondary</item>
+        <item name="colorSecondaryContainer">@color/md_theme_dark_secondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/md_theme_dark_onSecondaryContainer</item>
 
-        <!-- ── Tertiary ──────────────────────────────────────────────────── -->
-        <item name="colorTertiary">@color/md_theme_light_tertiary</item>
-        <item name="colorOnTertiary">@color/md_theme_light_onTertiary</item>
-        <item name="colorTertiaryContainer">@color/md_theme_light_tertiaryContainer</item>
-        <item name="colorOnTertiaryContainer">@color/md_theme_light_onTertiaryContainer</item>
+        <!-- Tertiary -->
+        <item name="colorTertiary">@color/md_theme_dark_tertiary</item>
+        <item name="colorOnTertiary">@color/md_theme_dark_onTertiary</item>
 
-        <!-- ── Error ─────────────────────────────────────────────────────── -->
-        <item name="colorError">@color/md_theme_light_error</item>
-        <item name="colorOnError">@color/md_theme_light_onError</item>
-        <item name="colorErrorContainer">@color/md_theme_light_errorContainer</item>
-        <item name="colorOnErrorContainer">@color/md_theme_light_onErrorContainer</item>
+        <!-- Error -->
+        <item name="colorError">@color/md_theme_dark_error</item>
+        <item name="colorOnError">@color/md_theme_dark_onError</item>
 
-        <!-- ── Background / Surface ─────────────────────────────────────── -->
-        <item name="android:colorBackground">@color/md_theme_light_background</item>
-        <item name="colorOnBackground">@color/md_theme_light_onBackground</item>
-        <item name="colorSurface">@color/md_theme_light_surface</item>
-        <item name="colorOnSurface">@color/md_theme_light_onSurface</item>
-        <item name="colorSurfaceVariant">@color/md_theme_light_surfaceVariant</item>
-        <item name="colorOnSurfaceVariant">@color/md_theme_light_onSurfaceVariant</item>
+        <!-- Surfaces -->
+        <item name="android:colorBackground">@color/md_theme_dark_background</item>
+        <item name="colorOnBackground">@color/md_theme_dark_onBackground</item>
+        <item name="colorSurface">@color/md_theme_dark_surface</item>
+        <item name="colorOnSurface">@color/md_theme_dark_onSurface</item>
+        <item name="colorSurfaceVariant">@color/md_theme_dark_surfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/md_theme_dark_onSurfaceVariant</item>
 
-        <!-- ── Outline ───────────────────────────────────────────────────── -->
-        <item name="colorOutline">@color/md_theme_light_outline</item>
+        <!-- Outline -->
+        <item name="colorOutline">@color/md_theme_dark_outline</item>
+        <item name="colorOutlineVariant">@color/md_theme_dark_outlineVariant</item>
 
-        <!-- ── Status bar ────────────────────────────────────────────────── -->
-        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorSurface</item>
-        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
+        <!-- System bars — match app bg -->
+        <item name="android:statusBarColor" tools:targetApi="l">@color/bg_deep</item>
+        <item name="android:navigationBarColor" tools:targetApi="l">@color/bg_deep</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
 
+    </style>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         TEXT APPEARANCES
+         ═══════════════════════════════════════════════════════════════ -->
+
+    <!-- App name in toolbar -->
+    <style name="TextAppearance.OptiPause.ToolbarTitle" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:fontFamily">@font/dm_sans_semibold</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">0.04</item>
+    </style>
+
+    <!-- Status pill label -->
+    <style name="TextAppearance.OptiPause.StatusLabel" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:fontFamily">@font/dm_sans_medium</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+
+    <!-- WORK / BREAK badge above countdown -->
+    <style name="TextAppearance.OptiPause.ModeBadge" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:fontFamily">@font/dm_sans_semibold</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">@color/accent_mint</item>
+    </style>
+
+    <!-- Main countdown digits — monospaced for stability -->
+    <style name="TextAppearance.OptiPause.Countdown" parent="TextAppearance.Material3.DisplayLarge">
+        <item name="android:fontFamily">@font/roboto_mono_bold</item>
+        <item name="android:textSize">52sp</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <!-- "remaining" sub-label -->
+    <style name="TextAppearance.OptiPause.RemainingLabel" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">@font/dm_sans_regular</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+
+    <!-- Stat card — tiny header label -->
+    <style name="TextAppearance.OptiPause.CardLabel" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:fontFamily">@font/dm_sans_semibold</item>
+        <item name="android:textSize">9sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:letterSpacing">0.15</item>
+    </style>
+
+    <!-- Stat card — value -->
+    <style name="TextAppearance.OptiPause.CardValue" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:fontFamily">@font/dm_sans_semibold</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/text_accent</item>
+    </style>
+
+    <!-- Tip card title -->
+    <style name="TextAppearance.OptiPause.TipTitle" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">@font/dm_sans_semibold</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/accent_mint</item>
+    </style>
+
+    <!-- Tip card body -->
+    <style name="TextAppearance.OptiPause.TipBody" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:fontFamily">@font/dm_sans_regular</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:lineSpacingExtra">2dp</item>
+    </style>
+
+    <!-- FAB label -->
+    <style name="TextAppearance.OptiPause.FabLabel" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">@font/dm_sans_semibold</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/on_accent</item>
+        <item name="android:letterSpacing">0.06</item>
+    </style>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         WIDGET STYLES
+         ═══════════════════════════════════════════════════════════════ -->
+
+    <!-- Gradient Button styled as a FAB — more stable for custom backgrounds -->
+    <style name="Widget.OptiPause.Button.Gradient" parent="Widget.Material3.Button">
+        <item name="android:background">@drawable/bg_fab_gradient</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:textAppearance">@style/TextAppearance.OptiPause.FabLabel</item>
+        <item name="android:elevation">12dp</item>
+        <item name="iconTint">@color/on_accent</item>
+        <item name="cornerRadius">30dp</item>
+        <item name="rippleColor">?attr/colorControlHighlight</item>
+        <item name="android:stateListAnimator" tools:ignore="NewApi">@null</item>
     </style>
 
 </resources>

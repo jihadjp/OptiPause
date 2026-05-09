@@ -9,6 +9,41 @@
 -->
 <resources>
 
+    <!-- ── Brand Accent ───────────────────────────────────────────── -->
+    <color name="accent_mint">#00E5A0</color>
+    <color name="accent_mint_dim">#0099698A</color>       <!-- 54% alpha -->
+    <color name="accent_amber">#FFB347</color>            <!-- Break mode -->
+    <color name="accent_amber_dim">#80FFB347</color>      <!-- 50% alpha -->
+    <color name="on_accent">#0D0F14</color>               <!-- text ON mint button -->
+
+    <!-- ── Background & Surfaces ──────────────────────────────────── -->
+    <color name="bg_deep">#0D0F14</color>                 <!-- page background -->
+    <color name="bg_mid">#12151C</color>                  <!-- slightly lighter bg -->
+    <color name="surface_card">#1A1E28</color>            <!-- stat cards -->
+    <color name="surface_glass">#261E2A30</color>         <!-- 15% white glass -->
+    <color name="surface_tip">#151921</color>             <!-- tip card bg -->
+
+    <!-- ── Strokes / Dividers ─────────────────────────────────────── -->
+    <color name="stroke_glass">#2900E5A0</color>          <!-- 16% mint -->
+    <color name="stroke_tip">#1A00E5A0</color>            <!-- 10% mint -->
+
+    <!-- ── Progress Rings ─────────────────────────────────────────── -->
+    <color name="ring_track_main">#1E2330</color>         <!-- dark ring track -->
+    <color name="ring_track_outer">#141820</color>
+    <color name="ring_track_inner">#0D1018</color>
+
+    <!-- ── Text ───────────────────────────────────────────────────── -->
+    <color name="text_primary">#F0F4FF</color>            <!-- near-white, cool tint -->
+    <color name="text_secondary">#8A90A8</color>          <!-- muted labels -->
+    <color name="text_accent">#00E5A0</color>             <!-- highlighted values -->
+    <color name="text_on_surface">#C8CEDF</color>         <!-- card text -->
+
+    <!-- ── Status Dots ────────────────────────────────────────────── -->
+    <color name="dot_idle">#454D66</color>
+    <color name="dot_running">#00E5A0</color>
+    <color name="dot_break">#FFB347</color>
+    <color name="md_theme_dark_outlineVariant">#1A2030</color>
+
     <!-- ── Light theme tokens ──────────────────────────────────────────── -->
     <color name="md_theme_light_primary">#2E7D32</color>
     <color name="md_theme_light_onPrimary">#FFFFFF</color>

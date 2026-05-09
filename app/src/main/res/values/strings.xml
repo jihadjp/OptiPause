@@ -26,4 +26,9 @@
     <string name="perm_dialog_message">OptiPause needs the \'Alarms &amp; Reminders\' permission to deliver exact interval reminders. Please enable it in Settings.</string>
     <string name="perm_open_settings">Open Settings</string>
     <string name="perm_cancel">Cancel</string>
+
+
+    <string name="status_running_work">Work Mode · Focusing</string>
+    <string name="status_running_break">Break Mode · Resting</string>
+    <string name="status_alarm">Time\'s up! Take a break.</string>
 </resources>

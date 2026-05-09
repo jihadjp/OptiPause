@@ -1,126 +1,372 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    activity_main.xml  —  OptiPause Premium UI
+    ═══════════════════════════════════════════
+    Design Direction: "Dark Luxury / Focused Calm"
+    • Deep charcoal background with soft ambient glow layers
+    • Mint-green (#00E5A0) primary accent — energising but calming
+    • Large, breathing circular timer with a multi-ring glow effect
+    • Glassmorphism stat cards at the bottom
+    • Floating Extended FAB pinned to bottom with gradient background
+    • No clutter — every element earns its space
+-->
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurface"
     android:fitsSystemWindows="true"
     tools:context=".ui.MainActivity">
 
+    <!-- ════════════════════════════════════════════════════════════
+         BACKGROUND  —  deep layered gradient painted via a View
+         ════════════════════════════════════════════════════════════ -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_main_gradient" />
+
+    <!-- Ambient glow blob — top right -->
+    <View
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="-60dp"
+        android:layout_marginEnd="-80dp"
+        android:background="@drawable/bg_glow_blob_primary"
+        android:alpha="0.18" />
+
+    <!-- Ambient glow blob — bottom left -->
+    <View
+        android:layout_width="260dp"
+        android:layout_height="260dp"
+        android:layout_gravity="bottom|start"
+        android:layout_marginStart="-80dp"
+        android:layout_marginBottom="80dp"
+        android:background="@drawable/bg_glow_blob_secondary"
+        android:alpha="0.12" />
+
+    <!-- ════════════════════════════════════════════════════════════
+         TOP BAR
+         ════════════════════════════════════════════════════════════ -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
-        app:elevation="0dp"
-        android:fitsSystemWindows="true">
+        app:elevation="0dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:title="@string/app_name"
+            android:layout_height="64dp"
+            android:paddingHorizontal="8dp"
+            app:title="OptiPause"
             app:titleCentered="true"
+            app:titleTextAppearance="@style/TextAppearance.OptiPause.ToolbarTitle"
             app:menu="@menu/menu_main"
             app:navigationIcon="@null" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
+    <!-- ════════════════════════════════════════════════════════════
+         SCROLLABLE CONTENT
+         ════════════════════════════════════════════════════════════ -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true"
+        android:paddingBottom="140dp"
+        android:clipToPadding="false"
+        android:overScrollMode="never"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
+            android:gravity="center_horizontal"
             android:paddingHorizontal="24dp"
-            android:paddingVertical="16dp"
-            android:gravity="center">
+            android:paddingTop="8dp">
 
-            <FrameLayout
-                android:layout_width="280dp"
-                android:layout_height="280dp"
-                android:layout_marginBottom="40dp">
-
-                <com.google.android.material.progressindicator.CircularProgressIndicator
-                    android:id="@+id/progressCircular"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    app:indicatorSize="280dp"
-                    app:trackThickness="16dp"
-                    app:trackCornerRadius="8dp"
-                    app:indicatorColor="?attr/colorPrimary"
-                    app:trackColor="?attr/colorSurfaceVariant"
-                    android:progress="0"
-                    android:max="100" />
+            <!-- ── Status pill ──────────────────────────────────── -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginBottom="32dp"
+                app:cardCornerRadius="18dp"
+                app:cardBackgroundColor="@color/surface_glass"
+                app:strokeColor="@color/stroke_glass"
+                app:strokeWidth="1dp"
+                app:cardElevation="0dp">
 
                 <LinearLayout
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="0dp">
+
+                    <!-- Status dot -->
+                    <View
+                        android:id="@+id/viewStatusDot"
+                        android:layout_width="8dp"
+                        android:layout_height="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/bg_status_dot_idle" />
+
+                    <TextView
+                        android:id="@+id/tvStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/status_idle"
+                        android:textAppearance="@style/TextAppearance.OptiPause.StatusLabel"
+                        android:letterSpacing="0.08" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ── Timer Ring Stack ────────────────────────────── -->
+            <!--  Outer glow ring  →  Track ring  →  Progress ring  →  Centre text  -->
+            <FrameLayout
+                android:layout_width="300dp"
+                android:layout_height="300dp"
+                android:layout_marginBottom="40dp">
+
+                <!-- Outermost ambient glow ring (decorative, always visible) -->
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:id="@+id/progressGlow"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    app:indicatorSize="300dp"
+                    app:trackThickness="2dp"
+                    app:indicatorColor="@color/accent_mint"
+                    app:trackColor="@color/ring_track_outer"
+                    android:progress="100"
+                    android:alpha="0.35"
+                    android:max="100" />
+
+                <!-- Main progress ring -->
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:id="@+id/progressCircular"
+                    android:layout_width="276dp"
+                    android:layout_height="276dp"
+                    android:layout_gravity="center"
+                    app:indicatorSize="276dp"
+                    app:trackThickness="14dp"
+                    app:trackCornerRadius="7dp"
+                    app:indicatorColor="@color/accent_mint"
+                    app:trackColor="@color/ring_track_main"
+                    android:progress="0"
+                    android:max="100" />
+
+                <!-- Inner decorative tick ring -->
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:layout_width="250dp"
+                    android:layout_height="250dp"
+                    android:layout_gravity="center"
+                    app:indicatorSize="250dp"
+                    app:trackThickness="1dp"
+                    app:indicatorColor="@color/accent_mint"
+                    app:trackColor="@color/ring_track_inner"
+                    android:progress="100"
+                    android:alpha="0.20"
+                    android:max="100" />
+
+                <!-- Centre content -->
+                <LinearLayout
+                    android:layout_width="200dp"
+                    android:layout_height="200dp"
                     android:layout_gravity="center"
                     android:orientation="vertical"
                     android:gravity="center">
 
+                    <!-- Mode badge -->
+                    <TextView
+                        android:id="@+id/tvModeBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="WORK"
+                        android:textAppearance="@style/TextAppearance.OptiPause.ModeBadge"
+                        android:letterSpacing="0.2"
+                        android:layout_marginBottom="6dp"
+                        android:visibility="gone" />
+
+                    <!-- Main countdown -->
                     <TextView
                         android:id="@+id/tvCountdown"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textAppearance="?attr/textAppearanceDisplayLarge"
-                        android:textColor="?attr/colorPrimary"
-                        android:textStyle="bold"
-                        android:fontFamily="@font/roboto_mono"
                         android:text="20:00"
+                        android:textAppearance="@style/TextAppearance.OptiPause.Countdown"
                         tools:text="19:42" />
 
+                    <!-- "remaining" label -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/label_remaining"
-                        android:textAppearance="?attr/textAppearanceTitleMedium"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:layout_marginTop="4dp" />
+                        android:textAppearance="@style/TextAppearance.OptiPause.RemainingLabel"
+                        android:layout_marginTop="6dp"
+                        android:letterSpacing="0.15" />
 
                 </LinearLayout>
             </FrameLayout>
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/tvInterval"
-                android:layout_width="wrap_content"
+            <!-- ── Interval + Session row ──────────────────────── -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="20 min interval"
-                app:chipIcon="@drawable/ic_interval"
-                app:chipCornerRadius="16dp"
-                android:layout_marginBottom="16dp"
-                style="@style/Widget.Material3.Chip.Assist" />
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="32dp">
 
-            <TextView
-                android:id="@+id/tvStatus"
-                android:layout_width="wrap_content"
+                <!-- Interval chip -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    app:cardCornerRadius="14dp"
+                    app:cardBackgroundColor="@color/surface_card"
+                    app:strokeColor="@color/stroke_glass"
+                    app:strokeWidth="1dp"
+                    app:cardElevation="0dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:paddingHorizontal="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="INTERVAL"
+                            android:textAppearance="@style/TextAppearance.OptiPause.CardLabel" />
+
+                        <TextView
+                            android:id="@+id/tvInterval"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="20 min"
+                            android:textAppearance="@style/TextAppearance.OptiPause.CardValue" />
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Sessions chip -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    app:cardCornerRadius="14dp"
+                    app:cardBackgroundColor="@color/surface_card"
+                    app:strokeColor="@color/stroke_glass"
+                    app:strokeWidth="1dp"
+                    app:cardElevation="0dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:paddingHorizontal="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="SESSIONS"
+                            android:textAppearance="@style/TextAppearance.OptiPause.CardLabel" />
+
+                        <TextView
+                            android:id="@+id/tvSessionCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textAppearance="@style/TextAppearance.OptiPause.CardValue" />
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+
+            <!-- ── Tip card ────────────────────────────────────── -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/status_idle"
-                android:textAppearance="?attr/textAppearanceTitleMedium"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:layout_marginBottom="48dp" />
+                app:cardCornerRadius="20dp"
+                app:cardBackgroundColor="@color/surface_tip"
+                app:strokeColor="@color/stroke_tip"
+                app:strokeWidth="1dp"
+                app:cardElevation="0dp">
 
-            <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-                android:id="@+id/btnStartStop"
-                android:layout_width="wrap_content"
-                android:layout_height="64dp"
-                android:layout_marginBottom="24dp"
-                android:paddingHorizontal="32dp"
-                android:text="@string/start_timer"
-                android:textAppearance="?attr/textAppearanceTitleMedium"
-                app:icon="@drawable/ic_play"
-                app:iconSize="24dp"
-                style="@style/Widget.Material3.ExtendedFloatingActionButton.Primary" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="18dp">
+
+                    <!-- Leaf icon -->
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginEnd="14dp"
+                        android:src="@drawable/ic_eye_tip"
+                        android:background="@drawable/bg_icon_circle"
+                        android:padding="8dp"
+                        app:tint="@color/accent_mint"
+                        android:contentDescription="@null" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Eye Care Tip"
+                            android:textAppearance="@style/TextAppearance.OptiPause.TipTitle" />
+
+                        <TextView
+                            android:id="@+id/tvTip"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Follow the 20-20-20 rule: every 20 min, look 20 feet away for 20 seconds."
+                            android:textAppearance="@style/TextAppearance.OptiPause.TipBody"
+                            android:layout_marginTop="2dp" />
+
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <!-- ════════════════════════════════════════════════════════════
+         BOTTOM ACTION AREA  —  floating pill button
+         ════════════════════════════════════════════════════════════ -->
+
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnStartStop"
+        android:layout_width="220dp"
+        android:layout_height="60dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="48dp"
+        android:text="@string/start_timer"
+        app:icon="@drawable/ic_play"
+        app:iconSize="22dp"
+        app:iconGravity="textStart"
+        app:iconPadding="12dp"
+        style="@style/Widget.OptiPause.Button.Gradient" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
