@@ -20,15 +20,35 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
+                    'proguard-rules.pro'
+        }
+        debug {
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
+            debuggable true
         }
     }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // ── View Binding ─────────────────────────────────────────────────────────
+    buildFeatures {
+        viewBinding true
+    }
+
+    // ── Lint ─────────────────────────────────────────────────────────────────
+    lint {
+        abortOnError false
+        baseline file("lint-baseline.xml")
     }
 }
 

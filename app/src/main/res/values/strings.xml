@@ -1,3 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">OptiPause</string>
+
+    <!-- Main screen -->
+    <string name="start_timer">Start Timer</string>
+    <string name="stop_timer">Stop Timer</string>
+    <string name="settings">Settings</string>
+    <string name="label_remaining">remaining</string>
+    <string name="status_idle">Idle — tap Start to begin</string>
+    <string name="status_running">● Timer running</string>
+
+    <!-- Settings bottom sheet -->
+    <string name="settings_title">Reminder Interval</string>
+    <string name="label_presets">Quick presets</string>
+    <string name="label_custom">Custom</string>
+    <string name="apply">Apply</string>
+
+    <!-- Notification -->
+    <string name="notif_channel_name">OptiPause Timer</string>
+    <string name="notif_title_running">Interval timer active</string>
+    <string name="notif_action_stop">Stop</string>
+
+    <!-- Permission dialog -->
+    <string name="perm_dialog_title">Permission Required</string>
+    <string name="perm_dialog_message">OptiPause needs the \'Alarms &amp; Reminders\' permission to deliver exact interval reminders. Please enable it in Settings.</string>
+    <string name="perm_open_settings">Open Settings</string>
+    <string name="perm_cancel">Cancel</string>
 </resources>

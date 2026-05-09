@@ -1,17 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    activity_main.xml  —  OptiPause Main Screen
-    Material 3 · View Binding · CoordinatorLayout + AppBarLayout
+    activity_main.xml
+    Material 3 main screen for OptiPause.
 
-    Visual hierarchy:
-      TopAppBar
-      └─ ScrollView
-         └─ LinearLayout (vertical, center)
-            ├─ Status Card (icon + title + subtitle + state chip)
-            ├─ Progress Ring (CircularProgressIndicator + countdown overlay)
-            ├─ Interval label row
-            ├─ Start / Stop button
-            └─ Settings button (outlined)
+    Layout:
+      ┌──────────────────────────────┐
+      │  Toolbar (title + settings)  │
+      ├──────────────────────────────┤
+      │                              │
+      │   ╔══════════════════════╗   │
+      │   ║  Circular Progress   ║   │
+      │   ║   ┌──────────────┐   ║   │
+      │   ║   │  MM : SS     │   ║   │
+      │   ║   │  countdown   │   ║   │
+      │   ║   └──────────────┘   ║   │
+      │   ╚══════════════════════╝   │
+      │                              │
+      │    20 min interval  (chip)   │
+      │    ● Running                 │
+      │                              │
+      │    [ ▶ Start Timer ]  (FAB)  │
+      │    [  ⚙ Settings  ]  (btn)  │
+      └──────────────────────────────┘
 -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -19,138 +29,59 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
+    android:background="?attr/colorSurface"
     tools:context=".ui.MainActivity">
 
-    <!-- ── Top App Bar ─────────────────────────────────────────────────── -->
+    <!-- ── App Bar ───────────────────────────────────────────────────────── -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:fitsSystemWindows="true"
-        app:liftOnScroll="true">
+        android:layout_height="wrap_content">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:title="@string/app_name"
-            app:titleTextAppearance="?attr/textAppearanceTitleLarge"
-            app:navigationIcon="@drawable/ic_timer"
-            app:navigationIconTint="?attr/colorPrimary" />
+            app:menu="@menu/menu_main"
+            app:navigationIcon="@null" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- ── Scrollable body ─────────────────────────────────────────────── -->
+    <!-- ── Scrollable Content ────────────────────────────────────────────── -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true"
-        android:overScrollMode="never"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:gravity="center_horizontal"
-            android:paddingHorizontal="24dp"
-            android:paddingTop="24dp"
-            android:paddingBottom="40dp">
+            android:padding="24dp"
+            android:gravity="center_horizontal">
 
-            <!-- ── Status Card ─────────────────────────────────────────── -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardStatus"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="32dp"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp"
-                app:strokeColor="?attr/colorOutlineVariant"
-                app:strokeWidth="1dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="20dp">
-
-                    <!-- Status dot indicator -->
-                    <ImageView
-                        android:id="@+id/ivStatusDot"
-                        android:layout_width="10dp"
-                        android:layout_height="10dp"
-                        android:src="@drawable/ic_dot_idle"
-                        android:importantForAccessibility="no" />
-
-                    <!-- Text block -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:layout_marginStart="14dp">
-
-                        <TextView
-                            android:id="@+id/tvStatusTitle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/status_paused"
-                            android:textAppearance="?attr/textAppearanceTitleMedium"
-                            android:textColor="?attr/colorOnSurface" />
-
-                        <TextView
-                            android:id="@+id/tvStatusSubtitle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="@string/status_paused_sub"
-                            android:textAppearance="?attr/textAppearanceBodySmall"
-                            android:textColor="?attr/colorOnSurfaceVariant" />
-
-                    </LinearLayout>
-
-                    <!-- Interval value chip (read-only display) -->
-                    <TextView
-                        android:id="@+id/tvIntervalValue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/default_interval_label"
-                        android:textAppearance="?attr/textAppearanceLabelMedium"
-                        android:textColor="?attr/colorPrimary"
-                        android:background="@drawable/bg_interval_pill"
-                        android:paddingHorizontal="12dp"
-                        android:paddingVertical="6dp" />
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ── Circular Progress Ring ───────────────────────────────── -->
-            <!--
-                FrameLayout acts as a container so we can overlay the
-                countdown text on top of the CircularProgressIndicator.
-                indicatorSize = 220dp → view size = 240dp (10dp margin each side)
-            -->
+            <!-- ── Progress + Countdown ──────────────────────────────────── -->
             <FrameLayout
                 android:layout_width="240dp"
                 android:layout_height="240dp"
-                android:layout_marginBottom="28dp">
+                android:layout_marginTop="32dp"
+                android:layout_marginBottom="32dp">
 
+                <!-- Circular progress ring (Material 3) -->
                 <com.google.android.material.progressindicator.CircularProgressIndicator
-                    android:id="@+id/progressIndicator"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:id="@+id/progressCircular"
+                    android:layout_width="240dp"
+                    android:layout_height="240dp"
                     android:layout_gravity="center"
-                    android:indeterminate="false"
-                    android:progress="100"
-                    app:indicatorSize="220dp"
-                    app:trackThickness="10dp"
-                    app:trackCornerRadius="5dp"
+                    app:indicatorSize="240dp"
+                    app:trackThickness="12dp"
+                    app:indicatorColor="?attr/colorPrimary"
                     app:trackColor="?attr/colorSurfaceVariant"
-                    app:indicatorColor="?attr/colorPrimary" />
+                    android:progress="0"
+                    android:max="100" />
 
-                <!-- Countdown text layered on top of the ring -->
+                <!-- Countdown text centred inside the ring -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -162,75 +93,60 @@
                         android:id="@+id/tvCountdown"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="20:00"
-                        android:textAppearance="?attr/textAppearanceDisplaySmall"
+                        android:textAppearance="?attr/textAppearanceDisplayMedium"
                         android:textColor="?attr/colorOnSurface"
-                        android:fontFamily="monospace"
-                        android:letterSpacing="0.03"
-                        tools:text="19:23" />
+                        android:fontFamily="@font/roboto_mono"
+                        android:text="20:00"
+                        tools:text="19:42" />
 
                     <TextView
-                        android:id="@+id/tvCountdownLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="@string/label_until_reminder"
+                        android:text="@string/label_remaining"
                         android:textAppearance="?attr/textAppearanceLabelSmall"
                         android:textColor="?attr/colorOnSurfaceVariant" />
 
                 </LinearLayout>
             </FrameLayout>
 
-            <!-- ── Interval row (icon + label) ─────────────────────────── -->
-            <LinearLayout
+            <!-- ── Interval chip ─────────────────────────────────────────── -->
+            <com.google.android.material.chip.Chip
+                android:id="@+id/tvInterval"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="36dp">
+                android:text="20 min interval"
+                app:chipIcon="@drawable/ic_interval"
+                android:layout_marginBottom="8dp"
+                style="@style/Widget.Material3.Chip.Assist" />
 
-                <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:src="@drawable/ic_schedule"
-                    app:tint="?attr/colorOnSurfaceVariant"
-                    android:importantForAccessibility="no" />
+            <!-- ── Status label ──────────────────────────────────────────── -->
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/status_idle"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:layout_marginBottom="40dp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:text="@string/label_interval_config"
-                    android:textAppearance="?attr/textAppearanceBodySmall"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
-
-            </LinearLayout>
-
-            <!-- ── Start / Stop Button ─────────────────────────────────── -->
-            <com.google.android.material.button.MaterialButton
+            <!-- ── Start / Stop FAB ──────────────────────────────────────── -->
+            <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
                 android:id="@+id/btnStartStop"
-                android:layout_width="match_parent"
-                android:layout_height="64dp"
-                android:text="@string/action_start"
-                android:textAppearance="?attr/textAppearanceTitleMedium"
-                app:cornerRadius="32dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:text="@string/start_timer"
                 app:icon="@drawable/ic_play"
-                app:iconGravity="textStart"
-                app:iconPadding="12dp"
-                style="@style/Widget.Material3.Button" />
+                style="@style/Widget.Material3.ExtendedFloatingActionButton.Primary" />
 
-            <!-- ── Settings Button ─────────────────────────────────────── -->
+            <!-- ── Settings button ───────────────────────────────────────── -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSettings"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="12dp"
-                android:text="@string/action_settings"
-                app:cornerRadius="26dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings"
                 app:icon="@drawable/ic_settings"
-                app:iconGravity="textStart"
-                app:iconPadding="12dp"
-                style="@style/Widget.Material3.Button.OutlinedButton" />
+                style="@style/Widget.Material3.Button.TonalButton" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

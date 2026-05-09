@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    bottom_sheet_settings.xml
+    Material 3 bottom sheet for configuring the reminder interval.
+-->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <!-- Handle indicator (visual affordance) -->
+    <View
+        android:layout_width="32dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/bg_bottom_sheet_handle" />
+
+    <!-- Title -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/settings_title"
+        android:textAppearance="?attr/textAppearanceTitleLarge"
+        android:textColor="?attr/colorOnSurface"
+        android:layout_marginBottom="24dp" />
+
+    <!-- Preset chips label -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/label_presets"
+        android:textAppearance="?attr/textAppearanceLabelLarge"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Chip Group for presets -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:layout_marginBottom="24dp">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupPresets"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:singleSelection="true"
+            app:selectionRequired="false" />
+
+    </HorizontalScrollView>
+
+    <!-- Custom interval label -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/label_custom"
+            android:textAppearance="?attr/textAppearanceLabelLarge"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <TextView
+            android:id="@+id/tvIntervalValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="20 minutes"
+            android:textAppearance="?attr/textAppearanceLabelLarge"
+            android:textColor="?attr/colorPrimary" />
+
+    </LinearLayout>
+
+    <!-- SeekBar 1–120 minutes -->
+    <SeekBar
+        android:id="@+id/seekbarInterval"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="119"
+        android:progress="19"
+        android:layout_marginBottom="32dp" />
+
+    <!-- Apply button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnApply"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/apply"
+        style="@style/Widget.Material3.Button" />
+
+</LinearLayout>

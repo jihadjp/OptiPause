@@ -1,5 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    colors.xml
+    Material 3 color tokens generated from seed color #2E7D32 (forest green).
+    On Android 12+ these are overridden by Monet dynamic color.
+    On older devices this palette is used as the static fallback.
+
+    Generated via https://m3.material.io/theme-builder with seed #2E7D32.
+-->
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+
+    <!-- ── Light theme tokens ──────────────────────────────────────────── -->
+    <color name="md_theme_light_primary">#2E7D32</color>
+    <color name="md_theme_light_onPrimary">#FFFFFF</color>
+    <color name="md_theme_light_primaryContainer">#A5D6A7</color>
+    <color name="md_theme_light_onPrimaryContainer">#003909</color>
+
+    <color name="md_theme_light_secondary">#52634F</color>
+    <color name="md_theme_light_onSecondary">#FFFFFF</color>
+    <color name="md_theme_light_secondaryContainer">#D5E8CF</color>
+    <color name="md_theme_light_onSecondaryContainer">#111F0F</color>
+
+    <color name="md_theme_light_tertiary">#38656A</color>
+    <color name="md_theme_light_onTertiary">#FFFFFF</color>
+    <color name="md_theme_light_tertiaryContainer">#BCEBF0</color>
+    <color name="md_theme_light_onTertiaryContainer">#002023</color>
+
+    <color name="md_theme_light_error">#B3261E</color>
+    <color name="md_theme_light_onError">#FFFFFF</color>
+    <color name="md_theme_light_errorContainer">#F9DEDC</color>
+    <color name="md_theme_light_onErrorContainer">#410E0B</color>
+
+    <color name="md_theme_light_background">#FDFDF6</color>
+    <color name="md_theme_light_onBackground">#1A1C18</color>
+    <color name="md_theme_light_surface">#FDFDF6</color>
+    <color name="md_theme_light_onSurface">#1A1C18</color>
+    <color name="md_theme_light_surfaceVariant">#DEE5D9</color>
+    <color name="md_theme_light_onSurfaceVariant">#424940</color>
+    <color name="md_theme_light_outline">#72796F</color>
+
+    <!-- ── Dark theme tokens ───────────────────────────────────────────── -->
+    <color name="md_theme_dark_primary">#8BC48A</color>
+    <color name="md_theme_dark_onPrimary">#003909</color>
+    <color name="md_theme_dark_primaryContainer">#1B5E20</color>
+    <color name="md_theme_dark_onPrimaryContainer">#A5D6A7</color>
+
+    <color name="md_theme_dark_secondary">#B9CCB4</color>
+    <color name="md_theme_dark_onSecondary">#253423</color>
+    <color name="md_theme_dark_secondaryContainer">#3B4B39</color>
+    <color name="md_theme_dark_onSecondaryContainer">#D5E8CF</color>
+
+    <color name="md_theme_dark_tertiary">#A0CFD4</color>
+    <color name="md_theme_dark_onTertiary">#00373C</color>
+    <color name="md_theme_dark_tertiaryContainer">#1F4D52</color>
+    <color name="md_theme_dark_onTertiaryContainer">#BCEBF0</color>
+
+    <color name="md_theme_dark_error">#F2B8B5</color>
+    <color name="md_theme_dark_onError">#601410</color>
+    <color name="md_theme_dark_errorContainer">#8C1D18</color>
+    <color name="md_theme_dark_onErrorContainer">#F9DEDC</color>
+
+    <color name="md_theme_dark_background">#1A1C18</color>
+    <color name="md_theme_dark_onBackground">#E2E3DB</color>
+    <color name="md_theme_dark_surface">#1A1C18</color>
+    <color name="md_theme_dark_onSurface">#E2E3DB</color>
+    <color name="md_theme_dark_surfaceVariant">#424940</color>
+    <color name="md_theme_dark_onSurfaceVariant">#C2C9BD</color>
+    <color name="md_theme_dark_outline">#8C9389</color>
+
 </resources>
